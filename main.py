@@ -15,14 +15,13 @@ class Animate(Scene):
             lambda x: 2 * math.sin(x),
             color=BLUE,
         )
-        relu_graph = axes.get_graph(
-            lambda x: max(x, 0),
-            use_smoothing=False,
-            color=YELLOW,
-        )
         poly_graph = axes.get_graph(
             self.poly_func,
             color=GREEN,
+        )
+        const_graph = axes.get_graph(
+            lambda x: 3,
+            color=ORANGE
         )
         self.play(ShowCreation(poly_graph))
         left_dot = Dot(color=RED)
@@ -48,24 +47,24 @@ class Animate(Scene):
         )
         self.play(left_tracker.animate.set_value(1), right_tracker.animate.set_value(5), run_time=2)
         # self.embed()
-        sin_label = axes.get_graph_label(sin_graph, "\\sin(x)")
-        relu_label = axes.get_graph_label(relu_graph, Text("Linear"))
-        poly_label = axes.get_graph_label(poly_graph, Text("Poly"), x=4)
         left_dot.clear_updaters()
         right_dot.clear_updaters()
-        self.play(ReplacementTransform(poly_graph, sin_graph), FadeIn(sin_label, RIGHT),
+        self.play(ReplacementTransform(poly_graph, sin_graph),
                   left_dot.animate.move_to(axes.i2gp(1, sin_graph)),
                   right_dot.animate.move_to(axes.i2gp(5, sin_graph)))
         self.wait()
-        self.play(ReplacementTransform(sin_graph, relu_graph), FadeTransform(sin_label, relu_label),
-                  left_dot.animate.move_to(axes.i2gp(1, relu_graph)),
-                  right_dot.animate.move_to(axes.i2gp(5, relu_graph)))
+        self.play(ReplacementTransform(sin_graph, const_graph),
+                  left_dot.animate.move_to(axes.i2gp(1, const_graph)),
+                  right_dot.animate.move_to(axes.i2gp(5, const_graph)))
+        const_rect = axes.get_riemann_rectangles(const_graph, [1, 5], dx=3.75)
+        self.play(Write(const_rect))
         self.wait()
+        self.play(FadeOut(const_rect))
         poly_graph = axes.get_graph(
             self.poly_func,
             color=GREEN,
         )
-        self.play(ReplacementTransform(relu_graph, poly_graph), FadeTransform(relu_label, poly_label),
+        self.play(ReplacementTransform(const_graph, poly_graph),
                   left_dot.animate.move_to(axes.i2gp(1, poly_graph)),
                   right_dot.animate.move_to(axes.i2gp(5, poly_graph)))
 
@@ -74,7 +73,8 @@ class Animate(Scene):
         dx_list = [1, 0.5, 0.25, 0.1, 0.05, 0.025, 0.01]
         rects_list = VGroup(
             *[
-                axes.get_riemann_rectangles(graph=poly_graph, x_range=[1, 5.01], stroke_width=0.05, stroke_color=GREEN, dx=dx)
+                axes.get_riemann_rectangles(graph=poly_graph, x_range=[1, 5.01], stroke_width=0.05, stroke_color=GREEN,
+                                            dx=dx)
                 for dx in dx_list
             ]
         )
@@ -82,7 +82,7 @@ class Animate(Scene):
         self.play(Write(first_approx))
         for k in range(1, len(dx_list)):
             new_approx = rects_list[k]
-            self.play(Transform(first_approx, new_approx), run_time = 1)
+            self.play(Transform(first_approx, new_approx), run_time=1)
             self.wait(0.5)
         self.wait()
 
