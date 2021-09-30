@@ -56,7 +56,7 @@ class Animate(Scene):
         self.play(ReplacementTransform(sin_graph, const_graph),
                   left_dot.animate.move_to(axes.i2gp(1, const_graph)),
                   right_dot.animate.move_to(axes.i2gp(5, const_graph)))
-        const_rect = axes.get_riemann_rectangles(const_graph, [1, 5], dx=3.75)
+        const_rect = axes.get_riemann_rectangles(const_graph, [1, 5], dx=3.75, stroke_color=WHITE)
         self.play(Write(const_rect))
         self.wait()
         self.play(FadeOut(const_rect))
