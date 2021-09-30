@@ -25,45 +25,49 @@ class Animate(Scene):
             color=GREEN,
         )
         self.play(ShowCreation(poly_graph))
-        left_lim = Dot(color=RED)
-        right_lim = Dot(color=RED)
-        left_lim.move_to(axes.i2gp(2, poly_graph))
-        right_lim.move_to(axes.i2gp(2, poly_graph))
+        left_dot = Dot(color=RED)
+        right_dot = Dot(color=RED)
+        left_dot.move_to(axes.i2gp(2, poly_graph))
+        right_dot.move_to(axes.i2gp(2, poly_graph))
 
-        left_start = 1
-        right_start = 5
-        left_line = always_redraw(lambda: axes.get_v_line(left_lim.get_bottom()))
-        right_line = always_redraw(lambda: axes.get_v_line(right_lim.get_bottom()))
+        left_line = always_redraw(lambda: axes.get_v_line(left_dot.get_bottom()))
+        right_line = always_redraw(lambda: axes.get_v_line(right_dot.get_bottom()))
 
-        self.play(FadeIn(left_lim, scale=0.5), FadeIn(right_lim, scale=0.5))
+        self.play(FadeIn(left_dot, scale=0.5), FadeIn(right_dot, scale=0.5))
         self.play(ShowCreation(left_line), ShowCreation(right_line))
+
         left_tracker = ValueTracker(2)
         right_tracker = ValueTracker(2)
         f_always(
-            left_lim.move_to,
+            left_dot.move_to,
             lambda: axes.i2gp(left_tracker.get_value(), poly_graph)
         )
         f_always(
-            right_lim.move_to,
+            right_dot.move_to,
             lambda: axes.i2gp(right_tracker.get_value(), poly_graph)
         )
-        self.play(left_tracker.animate.set_value(left_start), right_tracker.animate.set_value(right_start), run_time=2)
-
+        self.play(left_tracker.animate.set_value(1), right_tracker.animate.set_value(5), run_time=2)
+        # self.embed()
         sin_label = axes.get_graph_label(sin_graph, "\\sin(x)")
         relu_label = axes.get_graph_label(relu_graph, Text("Linear"))
         poly_label = axes.get_graph_label(poly_graph, Text("Poly"), x=4)
+        left_dot.clear_updaters()
+        right_dot.clear_updaters()
         self.play(ReplacementTransform(poly_graph, sin_graph), FadeIn(sin_label, RIGHT),
-                  left_tracker.animate.move_to(axes.i2gp(left_start, sin_graph)),
-                  right_tracker.animate.move_to(axes.i2gp(right_start, sin_graph)))
-        self.play(left_lim.animate.move_to(axes.i2gp(left_start, sin_graph)))
+                  left_dot.animate.move_to(axes.i2gp(1, sin_graph)),
+                  right_dot.animate.move_to(axes.i2gp(5, sin_graph)))
         self.wait()
         self.play(ReplacementTransform(sin_graph, relu_graph), FadeTransform(sin_label, relu_label),
-                  left_lim.animate.move_to(axes.i2gp(left_start, sin_graph)),
-                  right_lim.animate.move_to(axes.i2gp(right_start, sin_graph)))
+                  left_dot.animate.move_to(axes.i2gp(1, relu_graph)),
+                  right_dot.animate.move_to(axes.i2gp(5, relu_graph)))
         self.wait()
+        poly_graph = axes.get_graph(
+            self.poly_func,
+            color=GREEN,
+        )
         self.play(ReplacementTransform(relu_graph, poly_graph), FadeTransform(relu_label, poly_label),
-                  left_lim.animate.move_to(axes.i2gp(left_start, sin_graph)),
-                  right_lim.animate.move_to(axes.i2gp(right_start, sin_graph)))
+                  left_dot.animate.move_to(axes.i2gp(1, poly_graph)),
+                  right_dot.animate.move_to(axes.i2gp(5, poly_graph)))
 
         # self.play(left_tracker.animate.set_value(-2), right_tracker.animate.set_value(0), run_time=3)
         self.wait()
