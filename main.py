@@ -71,6 +71,20 @@ class Animate(Scene):
 
         # self.play(left_tracker.animate.set_value(-2), right_tracker.animate.set_value(0), run_time=3)
         self.wait()
+        dx_list = [1, 0.5, 0.25, 0.1, 0.05, 0.025, 0.01]
+        rects_list = VGroup(
+            *[
+                axes.get_riemann_rectangles(graph=poly_graph, x_range=[1, 5.01], stroke_width=0.05, stroke_color=GREEN, dx=dx)
+                for dx in dx_list
+            ]
+        )
+        first_approx = rects_list[0]
+        self.play(Write(first_approx))
+        for k in range(1, len(dx_list)):
+            new_approx = rects_list[k]
+            self.play(Transform(first_approx, new_approx), run_time = 1)
+            self.wait(0.5)
+        self.wait()
 
     def poly_func(self, x):
         return (x ** 3 - 5 * x ** 2 + 2 * x + 30) / 8

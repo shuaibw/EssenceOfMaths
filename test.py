@@ -1,33 +1,8 @@
-sin_graph = axes.get_graph(
-            lambda x: 2 * math.sin(x),
-            color=BLUE,
-        )
-        relu_graph = axes.get_graph(
-            lambda x: max(x, 0),
-            use_smoothing=False,
-            color=YELLOW,
-        )
-        poly_graph = axes.get_graph(
-            self.poly_func,
-            color=GREEN,
-        )
+from manimlib import *
 
-        sin_label = axes.get_graph_label(sin_graph, "\\sin(x)")
-        relu_label = axes.get_graph_label(relu_graph, Text("Linear"))
-        poly_label = axes.get_graph_label(poly_graph, Text("Poly"), x=4)
 
-        self.play(
-            ShowCreation(sin_graph),
-            FadeIn(sin_label, RIGHT),
-        )
-        self.wait()
-        self.play(
-            ReplacementTransform(sin_graph, relu_graph),
-            FadeTransform(sin_label, relu_label),
-        )
-        self.wait()
-        self.play(
-            ReplacementTransform(relu_graph, poly_graph),
-            FadeTransform(relu_label, poly_label),
-        )
-        self.wait()
+class PlayGround(Scene):
+    def construct(self):
+        txt = Text(
+            r'LaTeX এ বাংলায় লেখা খুবই সহজ। এটা ব্যবহার করে গানিতিক সূত্রাবলী খুব সহজেই লেখা যায়। এই যেমন আলবার্ট আইনস্টাইনের জনপ্রিয় সমীকরণ-')
+        self.play(Write(txt))
