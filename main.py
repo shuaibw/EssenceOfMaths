@@ -56,7 +56,8 @@ class Animate(Scene):
         self.play(ReplacementTransform(sin_graph, const_graph),
                   left_dot.animate.move_to(axes.i2gp(1, const_graph)),
                   right_dot.animate.move_to(axes.i2gp(5, const_graph)))
-        const_rect = axes.get_riemann_rectangles(const_graph, [1, 5], dx=3.75, stroke_color=WHITE, colors=(ORANGE, BLUE))
+        const_rect = axes.get_riemann_rectangles(const_graph, [1, 5], dx=3.75, stroke_color=WHITE,
+                                                 colors=(ORANGE, BLUE))
         right_brace = Brace(const_rect, RIGHT)
         top_brace = Brace(const_rect, UP)
         right_brace_label = right_brace.get_tex(
@@ -84,7 +85,7 @@ class Animate(Scene):
 
         # self.play(left_tracker.animate.set_value(-2), right_tracker.animate.set_value(0), run_time=3)
         self.wait()
-        dx_list = [1, 0.5, 0.25, 0.1, 0.05, 0.025, 0.01]
+        dx_list = [2, 1, 0.5, 0.25, 0.1, 0.05, 0.025]
         rects_list = VGroup(
             *[
                 axes.get_riemann_rectangles(graph=poly_graph, x_range=[1, 5.01], stroke_width=0.05, stroke_color=GREEN,
