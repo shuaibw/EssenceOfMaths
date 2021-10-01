@@ -101,7 +101,7 @@ class Animate(Scene):
 
         # self.play(left_tracker.animate.set_value(-2), right_tracker.animate.set_value(0), run_time=3)
         self.wait()
-        dx_list = [2, 1, 0.5, 0.25, 0.1, 0.05, 0.025]
+        dx_list = [1, 0.5, 0.25, 0.1, 0.05, 0.025]
         rects_list = VGroup(
             *[
                 axes.get_riemann_rectangles(graph=poly_graph, x_range=[left_end, right_end + .01], stroke_width=0.05,
@@ -112,7 +112,16 @@ class Animate(Scene):
         )
         first_approx = rects_list[0]
         start_rect = first_approx[0]
-        self.play(FadeIn(first_approx))
+        pieces = VGroup()
+        for left_x in range(2, 6):
+            y = poly_graph.underlying_function(left_x)
+            line = Line(axes.c2p(left_x, y), axes.c2p(left_x + 1, y))
+            line.set_stroke(color=YELLOW, opacity=0.7)
+            pieces.add(line)
+        self.play(ShowCreation(pieces), run_time=2)
+        self.play(FadeIn(first_approx), lag_ratio=0.5, run_time=2)
+
+        
         f_brace = Brace(start_rect, LEFT, buff=0).set_color(PURPLE)
         dx_brace = Brace(start_rect, DOWN, buff=0).set_color(ORANGE)
         f_brace.label = f_brace.get_tex(r'f(x)', buff=0).scale(0.8).set_color(f_brace.get_color())
