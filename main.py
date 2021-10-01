@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 from manimlib import *
 
@@ -7,7 +9,9 @@ from manimlib import *
 
 class Animate(Scene):
     def construct(self):
-        axes = Axes((-3, 10), (-1, 8))
+        axes = Axes((-3, 10), (-1, 8), axis_config={
+            "include_tip": False,
+        })
         axes.add_coordinate_labels()
 
         self.play(Write(axes, lag_ratio=0.01, run_time=1))
@@ -19,6 +23,10 @@ class Animate(Scene):
             self.poly_func,
             color=GREEN,
         )
+        exp_ln_graph = axes.get_graph(
+            lambda x: math.exp(math.sin(x)),
+            color=YELLOW
+        )
         const_graph = axes.get_graph(
             lambda x: 3,
             color=ORANGE
@@ -26,8 +34,8 @@ class Animate(Scene):
         self.play(ShowCreation(poly_graph))
         left_dot = Dot(color=RED)
         right_dot = Dot(color=RED)
-        left_dot.move_to(axes.i2gp(2, poly_graph))
-        right_dot.move_to(axes.i2gp(2, poly_graph))
+        left_dot.move_to(axes.i2gp(3, poly_graph))
+        right_dot.move_to(axes.i2gp(3, poly_graph))
 
         left_line = always_redraw(lambda: axes.get_v_line(left_dot.get_bottom()))
         right_line = always_redraw(lambda: axes.get_v_line(right_dot.get_bottom()))
@@ -35,8 +43,8 @@ class Animate(Scene):
         self.play(FadeIn(left_dot, scale=0.5), FadeIn(right_dot, scale=0.5))
         self.play(ShowCreation(left_line), ShowCreation(right_line))
 
-        left_tracker = ValueTracker(2)
-        right_tracker = ValueTracker(2)
+        left_tracker = ValueTracker(3)
+        right_tracker = ValueTracker(3)
         f_always(
             left_dot.move_to,
             lambda: axes.i2gp(left_tracker.get_value(), poly_graph)
@@ -45,18 +53,26 @@ class Animate(Scene):
             right_dot.move_to,
             lambda: axes.i2gp(right_tracker.get_value(), poly_graph)
         )
-        self.play(left_tracker.animate.set_value(1), right_tracker.animate.set_value(5), run_time=2)
+        left_end = 2
+        right_end = 6
+        self.play(left_tracker.animate.set_value(left_end), right_tracker.animate.set_value(right_end), run_time=2)
         # self.embed()
         left_dot.clear_updaters()
         right_dot.clear_updaters()
+
         self.play(ReplacementTransform(poly_graph, sin_graph),
-                  left_dot.animate.move_to(axes.i2gp(1, sin_graph)),
-                  right_dot.animate.move_to(axes.i2gp(5, sin_graph)))
+                  left_dot.animate.move_to(axes.i2gp(left_end, sin_graph)),
+                  right_dot.animate.move_to(axes.i2gp(right_end, sin_graph)))
         self.wait()
-        self.play(ReplacementTransform(sin_graph, const_graph),
-                  left_dot.animate.move_to(axes.i2gp(1, const_graph)),
-                  right_dot.animate.move_to(axes.i2gp(5, const_graph)))
-        const_rect = axes.get_riemann_rectangles(const_graph, [1, 5], dx=3.75, stroke_color=WHITE,
+
+        self.play(ReplacementTransform(sin_graph, exp_ln_graph),
+                  left_dot.animate.move_to(axes.i2gp(left_end, exp_ln_graph)),
+                  right_dot.animate.move_to(axes.i2gp(right_end, exp_ln_graph)))
+        self.wait()
+        self.play(ReplacementTransform(exp_ln_graph, const_graph),
+                  left_dot.animate.move_to(axes.i2gp(left_end, const_graph)),
+                  right_dot.animate.move_to(axes.i2gp(right_end, const_graph)))
+        const_rect = axes.get_riemann_rectangles(const_graph, [left_end, right_end], dx=3.75, stroke_color=WHITE,
                                                  colors=(ORANGE, BLUE), fill_opacity=0.4)
         right_brace = Brace(const_rect, RIGHT)
         top_brace = Brace(const_rect, UP)
@@ -80,26 +96,34 @@ class Animate(Scene):
             color=GREEN,
         )
         self.play(ReplacementTransform(const_graph, poly_graph),
-                  left_dot.animate.move_to(axes.i2gp(1, poly_graph)),
-                  right_dot.animate.move_to(axes.i2gp(5, poly_graph)))
+                  left_dot.animate.move_to(axes.i2gp(left_end, poly_graph)),
+                  right_dot.animate.move_to(axes.i2gp(right_end, poly_graph)))
 
         # self.play(left_tracker.animate.set_value(-2), right_tracker.animate.set_value(0), run_time=3)
         self.wait()
         dx_list = [2, 1, 0.5, 0.25, 0.1, 0.05, 0.025]
         rects_list = VGroup(
             *[
-                axes.get_riemann_rectangles(graph=poly_graph, x_range=[1, 5.01], stroke_width=0.05, stroke_color=GREEN,
+                axes.get_riemann_rectangles(graph=poly_graph, x_range=[left_end, right_end + .01], stroke_width=0.05,
+                                            stroke_color=GREEN,
                                             dx=dx, fill_opacity=0.6)
                 for dx in dx_list
             ]
         )
         first_approx = rects_list[0]
-        self.play(Write(first_approx))
-        for k in range(1, len(dx_list)):
-            new_approx = rects_list[k]
-            self.play(Transform(first_approx, new_approx), run_time=1)
-            self.wait(0.5)
+        start_rect = first_approx[0]
+        self.play(FadeIn(first_approx))
+        f_brace = Brace(start_rect, LEFT, buff=0).set_color(PURPLE)
+        dx_brace = Brace(start_rect, DOWN, buff=0).set_color(ORANGE)
+        f_brace.label = f_brace.get_tex(r'f(x)', buff=0).scale(0.8).set_color(f_brace.get_color())
+        dx_brace.label = dx_brace.get_tex(r'dx').scale(0.8).set_color(dx_brace.get_color())
+        self.play(*list(map(GrowFromCenter, [f_brace, dx_brace])),
+                  *list(map(Write, [f_brace.label, dx_brace.label])))
+        # for k in range(1, len(dx_list)):
+        #     new_approx = rects_list[k]
+        #     self.play(Transform(first_approx, new_approx), run_time=1)
+        #     self.wait(0.5)
         self.wait()
 
     def poly_func(self, x):
-        return (x ** 3 - 5 * x ** 2 + 2 * x + 30) / 8
+        return ((x - 1) ** 3 - 5 * (x - 1) ** 2 + 2 * (x - 1) + 30) / 8
