@@ -56,10 +56,24 @@ class Animate(Scene):
         self.play(ReplacementTransform(sin_graph, const_graph),
                   left_dot.animate.move_to(axes.i2gp(1, const_graph)),
                   right_dot.animate.move_to(axes.i2gp(5, const_graph)))
-        const_rect = axes.get_riemann_rectangles(const_graph, [1, 5], dx=3.75, stroke_color=WHITE)
-        self.play(Write(const_rect))
+        const_rect = axes.get_riemann_rectangles(const_graph, [1, 5], dx=3.75, stroke_color=WHITE, colors=(ORANGE, BLUE))
+        right_brace = Brace(const_rect, RIGHT)
+        top_brace = Brace(const_rect, UP)
+        right_brace_label = right_brace.get_tex(
+            r"\text{Height}"
+        )
+        top_brace_label = top_brace.get_tex(
+            r"\text{Width}"
+        )
+        in_label = Tex(r"\text{Area}=\text{Height}\times\text{Width}").scale(0.7)
+        in_label.move_to(const_rect)
+        self.play(GrowFromCenter(right_brace), Write(right_brace_label))
+        self.play(GrowFromCenter(top_brace), Write(top_brace_label))
+        self.play(Write(const_rect), Write(in_label))
+
         self.wait()
-        self.play(FadeOut(const_rect))
+        self.play(
+            *[FadeOut(x) for x in [const_rect, right_brace, right_brace_label, top_brace_label, top_brace, in_label]])
         poly_graph = axes.get_graph(
             self.poly_func,
             color=GREEN,
