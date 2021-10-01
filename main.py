@@ -57,14 +57,14 @@ class Animate(Scene):
                   left_dot.animate.move_to(axes.i2gp(1, const_graph)),
                   right_dot.animate.move_to(axes.i2gp(5, const_graph)))
         const_rect = axes.get_riemann_rectangles(const_graph, [1, 5], dx=3.75, stroke_color=WHITE,
-                                                 colors=(ORANGE, BLUE))
+                                                 colors=(ORANGE, BLUE), fill_opacity=0.4)
         right_brace = Brace(const_rect, RIGHT)
         top_brace = Brace(const_rect, UP)
-        right_brace_label = right_brace.get_tex(
-            r"\text{Height}"
+        right_brace_label = right_brace.get_text(
+            "Height", font_size=24, gradient=(BLUE, GREEN)
         )
-        top_brace_label = top_brace.get_tex(
-            r"\text{Width}"
+        top_brace_label = top_brace.get_text(
+            "Width", font_size=24, gradient=(BLUE, GREEN)
         )
         in_label = Tex(r"\text{Area}=\text{Height}\times\text{Width}").scale(0.7)
         in_label.move_to(const_rect)
@@ -89,7 +89,7 @@ class Animate(Scene):
         rects_list = VGroup(
             *[
                 axes.get_riemann_rectangles(graph=poly_graph, x_range=[1, 5.01], stroke_width=0.05, stroke_color=GREEN,
-                                            dx=dx)
+                                            dx=dx, fill_opacity=0.6)
                 for dx in dx_list
             ]
         )
