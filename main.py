@@ -23,9 +23,13 @@ class Animate(Scene):
             self.poly_func,
             color=GREEN,
         )
-        exp_ln_graph = axes.get_graph(
+        exp_sin_graph = axes.get_graph(
             lambda x: math.exp(math.sin(x)),
             color=YELLOW
+        )
+        exp_sin_graph_semi = axes.get_graph(
+            lambda x: math.exp(0.5 * math.sin(x)),
+            color=PURPLE
         )
         const_graph = axes.get_graph(
             lambda x: 3,
@@ -59,19 +63,13 @@ class Animate(Scene):
         # self.embed()
         left_dot.clear_updaters()
         right_dot.clear_updaters()
+        graph_list = [poly_graph, sin_graph, exp_sin_graph, exp_sin_graph_semi, const_graph]
+        for i in range(len(graph_list) - 1):
+            self.play(ReplacementTransform(graph_list[i], graph_list[i + 1]),
+                      left_dot.animate.move_to(axes.i2gp(left_end, graph_list[i + 1])),
+                      right_dot.animate.move_to(axes.i2gp(right_end, graph_list[i + 1])))
+            self.wait()
 
-        self.play(ReplacementTransform(poly_graph, sin_graph),
-                  left_dot.animate.move_to(axes.i2gp(left_end, sin_graph)),
-                  right_dot.animate.move_to(axes.i2gp(right_end, sin_graph)))
-        self.wait()
-
-        self.play(ReplacementTransform(sin_graph, exp_ln_graph),
-                  left_dot.animate.move_to(axes.i2gp(left_end, exp_ln_graph)),
-                  right_dot.animate.move_to(axes.i2gp(right_end, exp_ln_graph)))
-        self.wait()
-        self.play(ReplacementTransform(exp_ln_graph, const_graph),
-                  left_dot.animate.move_to(axes.i2gp(left_end, const_graph)),
-                  right_dot.animate.move_to(axes.i2gp(right_end, const_graph)))
         const_rect = axes.get_riemann_rectangles(const_graph, [left_end, right_end], dx=3.75, stroke_color=WHITE,
                                                  colors=(ORANGE, BLUE), fill_opacity=0.4)
         right_brace = Brace(const_rect, RIGHT)
