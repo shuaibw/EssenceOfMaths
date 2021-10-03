@@ -117,24 +117,40 @@ class Animate(Scene):
             line.set_stroke(color=YELLOW, opacity=0.7)
             pieces.add(line)
         self.play(ShowCreation(pieces), run_time=2)
-        self.play(FadeIn(first_approx[0]), run_time=1)
+        self.play(FadeIn(start_rect), run_time=1)
 
         f_brace = Brace(start_rect, LEFT, buff=0).set_color(YELLOW)
         dx_brace = Brace(start_rect, DOWN, buff=0).set_color(ORANGE)
-        f_brace.label = f_brace.get_tex(r'f(x)', buff=0).scale(0.8).set_color(f_brace.get_color())
-        dx_brace.label = dx_brace.get_tex(r'dx').scale(0.8).set_color(dx_brace.get_color())
+        f_brace.label = f_brace.get_tex(r'f(x_1)', buff=0).scale(0.8).set_color(f_brace.get_color())
+        dx_brace.label = dx_brace.get_tex(r'\Delta x').scale(0.8).set_color(dx_brace.get_color())
+
+        area_text = Tex(r'A_1').move_to(start_rect).scale(0.7)
+        show_area_text, a2, a3, a4 = Tex(r'\text{Area}\approx A_1', '+A_2', '+A_3', '+A_4')
+        area_tex_list = [a2, a3, a4]
+        show_area_text.to_corner(UP)
+        a2.next_to(show_area_text)
+        a3.next_to(a2)
+        a4.next_to(a3)
         self.play(*list(map(GrowFromCenter, [f_brace, dx_brace])),
-                  *list(map(Write, [f_brace.label, dx_brace.label])))
+                  *list(map(Write, [f_brace.label, dx_brace.label])),
+                  FadeIn(area_text), FadeIn(show_area_text))
         dx_brace_group = VGroup(dx_brace, dx_brace.label)
         last_brace = f_brace
-        for rect in first_approx[1:]:
+        last_area_text = area_text
+        for idx, rect in enumerate(first_approx[1:], 2):
+            new_area_text = Tex(r'A_%d' % idx).move_to(rect).scale(0.7)
             f_next_brace = Brace(rect, LEFT, buff=0).set_color(f_brace.get_color())
-            f_next_brace.label = f_next_brace.get_tex(r'f(x)', buff=0).scale(0.8).set_color(f_brace.get_color())
+            f_next_brace.label = f_next_brace.get_tex(r'f(x_%d)' % idx, buff=0).scale(0.8).set_color(
+                f_brace.get_color())
+            self.play(last_area_text.animate.move_to(area_tex_list[idx-2]))
             self.play(FadeIn(rect), dx_brace_group.animate.next_to(rect, DOWN, buff=0),
                       ReplacementTransform(last_brace, f_next_brace),
-                      ReplacementTransform(last_brace.label, f_next_brace.label)
+                      ReplacementTransform(last_brace.label, f_next_brace.label),
+                      ReplacementTransform(last_area_text, new_area_text),
+                      FadeIn(area_tex_list[idx - 2])
                       )
             last_brace = f_next_brace
+            last_area_text = new_area_text
         # for k in range(1, len(dx_list)):
         #     new_approx = rects_list[k]
         #     self.play(Transform(first_approx, new_approx), run_time=1)
