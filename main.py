@@ -110,12 +110,7 @@ class Animate(Scene):
         )
         first_approx = rects_list[0]
         start_rect = first_approx[0]
-        pieces = VGroup()
-        for left_x in range(2, 6):
-            y = poly_graph.underlying_function(left_x)
-            line = Line(axes.c2p(left_x, y), axes.c2p(left_x + 1, y))
-            line.set_stroke(color=YELLOW, opacity=0.7)
-            pieces.add(line)
+        pieces = self.create_const_lines(2, 6, 1, axes, poly_graph, color=YELLOW, opacity=0.7)
         self.play(ShowCreation(pieces), run_time=2)
         self.play(FadeIn(start_rect), run_time=1)
 
@@ -125,7 +120,7 @@ class Animate(Scene):
         dx_brace.label = dx_brace.get_tex(r'\Delta x').scale(0.8).set_color(dx_brace.get_color())
 
         area_in_text = Tex(r'A_1').move_to(start_rect).scale(0.7)
-        show_area_text, a1, a2, a3, a4 = Tex(r'\text{Area}\approx ', '+A_1', '+A_2', '+A_3', '+A_4')
+        show_area_text, a1, a2, a3, a4 = Tex(r'\text{Area}\approx ', ' A_1', '+A_2', '+A_3', '+A_4')
         area_tex_list = [show_area_text, a1, a2, a3, a4]
         for x in area_tex_list:
             x.scale(0.7)
@@ -139,6 +134,7 @@ class Animate(Scene):
         dx_brace_group = VGroup(dx_brace, dx_brace.label)
         last_brace = f_brace
         last_area_in_text = area_in_text
+        to_remove = []
         for idx, rect in enumerate(first_approx[1:], 2):
             new_area_in_text = Tex(r'A_%d' % idx).move_to(rect).scale(0.7)
             f_next_brace = Brace(rect, LEFT, buff=0).set_color(f_brace.get_color())
@@ -152,11 +148,34 @@ class Animate(Scene):
                       )
             last_brace = f_next_brace
             last_area_in_text = new_area_in_text
-        # for k in range(1, len(dx_list)):
-        #     new_approx = rects_list[k]
-        #     self.play(Transform(first_approx, new_approx), run_time=1)
-        #     self.wait(0.5)
+        tex_rect = SurroundingRectangle(VGroup(*area_tex_list[1:]))
+        tex_rect.set_stroke(BLUE, 2)
+        self.play(ShowCreation(tex_rect))
+        show_area_sum = Tex(r'\text{Area} \approx \sum_{i=1}^{n}f(x_i)\Delta x').scale(0.7)
+        show_area_sum.next_to(tex_rect, DOWN)
+        self.play(ReplacementTransform(tex_rect, show_area_sum), *list(map(FadeOut, area_tex_list)))
+        # self.play(show_area_sum.animate.shift(UP))
+        to_remove += [last_area_in_text, last_brace, last_brace.label, dx_brace_group]
+        self.play(*(list(map(FadeOut, to_remove))))
+        for k in range(1, len(dx_list)):
+            new_approx = rects_list[k]
+            self.play(Transform(first_approx, new_approx), FadeOut(pieces), run_time=1)
+            pieces = self.create_const_lines(2, 6, dx_list[k], axes, poly_graph, color=YELLOW, opacity=1)
+            self.play(FadeIn(pieces), lag_ratio=0.5, time=1)
+            self.wait(0.5)
         self.wait()
+
+    def create_const_lines(self, start, end, step, axes, graph, **kwargs):
+        pieces = VGroup()
+        for left_x in np.arange(start, end, step):
+            y = graph.underlying_function(left_x)
+            line = Line(axes.c2p(left_x, y), axes.c2p(left_x + step, y))
+            line.set_stroke(**kwargs)
+            pieces.add(line)
+        return pieces
+
+    def shift_up(mobject):
+        return mobject.shift(UP)
 
     def poly_func(self, x):
         return ((x - 1) ** 3 - 5 * (x - 1) ** 2 + 2 * (x - 1) + 30) / 8
