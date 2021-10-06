@@ -102,7 +102,7 @@ class Animate(Scene):
         dx_list = [1, 0.5, 0.25, 0.1, 0.05, 0.025]
         rects_list = VGroup(
             *[
-                axes.get_riemann_rectangles(graph=poly_graph, x_range=[left_end, right_end + .01], stroke_width=0.05,
+                axes.get_riemann_rectangles(graph=poly_graph, x_range=[left_end, right_end + .01], stroke_width=0.02,
                                             stroke_color=GREEN,
                                             dx=dx, fill_opacity=0.6)
                 for dx in dx_list
@@ -110,6 +110,7 @@ class Animate(Scene):
         )
         first_approx = rects_list[0]
         start_rect = first_approx[0]
+        start_rect.get_num_points()
         pieces = self.create_const_lines(2, 6, 1, axes, poly_graph, color=YELLOW, opacity=0.7)
         self.play(ShowCreation(pieces), run_time=2)
         self.play(FadeIn(start_rect), run_time=1)
@@ -131,6 +132,21 @@ class Animate(Scene):
                   *list(map(Write, [f_brace.label, dx_brace.label])),
                   FadeIn(area_in_text), FadeIn(show_area_text),
                   FadeInFromPoint(area_tex_list[1], area_in_text.get_center()))
+
+        # show_dx, val_show_dx = dx_label = VGroup(
+        #     Tex("\Delta x = ", font_size=30),
+        #     DecimalNumber(
+        #         0,
+        #         show_ellipsis=False,
+        #         num_decimal_places=2,
+        #         include_sign=False,
+        #         font_size=30
+        #     )
+        # )
+        # dx_label.arrange(RIGHT)
+        # dx_label.to_edge(RIGHT/2)
+        # val_show_dx.set_value(dx_list[0])
+        # self.play(FadeInFromPoint(dx_label, dx_brace.get_center()))
         dx_brace_group = VGroup(dx_brace, dx_brace.label)
         last_brace = f_brace
         last_area_in_text = area_in_text
@@ -151,12 +167,33 @@ class Animate(Scene):
         tex_rect = SurroundingRectangle(VGroup(*area_tex_list[1:]))
         tex_rect.set_stroke(BLUE, 2)
         self.play(ShowCreation(tex_rect))
-        show_area_sum = Tex(r'\text{Area} \approx \sum_{i=1}^{n}f(x_i)\Delta x').scale(0.7)
+        show_area_sum = Tex(r'\text{Area} \approx\sum_{i=1}^{n}f(x_i)\Delta x', font_size=35)
         show_area_sum.next_to(tex_rect, DOWN)
         self.play(ReplacementTransform(tex_rect, show_area_sum), *list(map(FadeOut, area_tex_list)))
+        n_tex, n_value = n_label = VGroup(
+            Tex(r'n='),
+            DecimalNumber(
+                4,
+                num_decimal_places=0
+            )
+        ).scale(0.7)
+        dx_tex, dx_value = dx_label = VGroup(
+            Tex(r'\Delta x='),
+            DecimalNumber(
+                1,
+                num_decimal_places=2
+            )
+        ).scale(0.7)
+        dx_label.arrange(RIGHT)
+        n_label.arrange(RIGHT)
+        n_dx_grp = VGroup(n_label, dx_label).arrange(DOWN)
+        n_dx_grp.to_edge(RIGHT_SIDE).shift(RIGHT/1.8)
+        self.play(Write(n_dx_grp))
+
         # self.play(show_area_sum.animate.shift(UP))
         to_remove += [last_area_in_text, last_brace, last_brace.label, dx_brace_group]
         self.play(*(list(map(FadeOut, to_remove))))
+        # self.embed()
         for k in range(1, len(dx_list)):
             new_approx = rects_list[k]
             self.play(Transform(first_approx, new_approx), FadeOut(pieces), run_time=1)
@@ -173,9 +210,6 @@ class Animate(Scene):
             line.set_stroke(**kwargs)
             pieces.add(line)
         return pieces
-
-    def shift_up(mobject):
-        return mobject.shift(UP)
 
     def poly_func(self, x):
         return ((x - 1) ** 3 - 5 * (x - 1) ** 2 + 2 * (x - 1) + 30) / 8
