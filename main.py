@@ -118,7 +118,6 @@ class Animate(Scene):
                   left_dot.animate.move_to(axes.i2gp(left_end, poly_graph)),
                   right_dot.animate.move_to(axes.i2gp(right_end, poly_graph)))
 
-        # self.play(left_tracker.animate.set_value(-2), right_tracker.animate.set_value(0), run_time=3)
         self.wait()
         dx_list = [1, 0.5, 0.25, 0.1, 0.05, 0.025, 0.01]
         rects_list = VGroup(
@@ -184,9 +183,9 @@ class Animate(Scene):
                       )
             last_brace = f_next_brace
             last_area_in_text = new_area_in_text
+
         tex_rect = SurroundingRectangle(VGroup(*area_tex_list[1:]))
         tex_rect.set_stroke(BLUE, 2.5)
-        self.play(ShowCreation(tex_rect))
         show_area_sum = Tex(r'Area ', r'\approx', r'\sum\limits_', r'{i=1}^', r'{n}', r'f(x_i)',
                             r'\Delta x',
                             font_size=35)
@@ -196,6 +195,30 @@ class Animate(Scene):
         # show_area_sum[6].set_color(ORANGE)
         # sas = TexText(r'Area ', r'$\approx$', r'$\sum_{i=1}^{n}$', r'$f(x_i)$', r'$\Delta x$', font_size=35)
         show_area_sum.next_to(tex_rect, DOWN)
+        to_remove += [last_area_in_text, last_brace, last_brace.label, dx_brace_group]
+        self.play(*(list(map(FadeOut, to_remove))))
+
+        # Add error expl
+        first_approx.save_state()
+        self.play(*[i.animate.set_opacity(0.1) for i in first_approx[1:]], lag_ratio=1, run_time=2)
+        self.play(
+            ShowCreationThenFadeOut(Line(axes.c2p(2, -0.1), axes.c2p(3, -0.1)).set_stroke(color=PURPLE, opacity=1)))
+        _ = poly_graph.underlying_function(2)
+        self.play(ShowCreationThenFadeOut(
+            Line(axes.c2p(2, _ + 0.1), axes.c2p(3, _ + 0.1)).set_stroke(color=PURPLE, opacity=1)))
+        _tracker = ValueTracker(2)
+        _dot = Dot(color=ORANGE)
+        _dot.move_to(axes.i2gp(2, poly_graph))
+        f_always(
+            _dot.move_to,
+            lambda: axes.i2gp(_tracker.get_value(), poly_graph)
+        )
+        self.play(FadeIn(_dot, scale=0.5))
+        self.play(_tracker.animate.set_value(3), run_time=2)
+        self.play(FadeOut(_dot), first_approx.animate.restore(), run_time=2)
+        # End Err expl
+
+        self.play(ShowCreation(tex_rect))
         self.play(ReplacementTransform(tex_rect, show_area_sum), *list(map(FadeOut, area_tex_list)))
         # self.play(Transform(show_area_sum[0], TexText(r'$\int_a^b$')))
         n_tex, n_value = n_label = VGroup(
@@ -218,8 +241,7 @@ class Animate(Scene):
         n_dx_grp.to_edge(RIGHT_SIDE).shift(RIGHT / 1.8)
         self.play(Write(n_dx_grp))
 
-        to_remove += [last_area_in_text, last_brace, last_brace.label, dx_brace_group]
-        self.play(*(list(map(FadeOut, to_remove))))
+
         int_start = TexText(r'$a$').set_color(BLUE)
         int_end = TexText(r'$b$').set_color(GREEN)
         int_start.move_to(axes.c2p(2, -.5))
@@ -253,7 +275,7 @@ class Animate(Scene):
         self.play(TransformFromCopy(show_area_sum[5], integral_sign[3]), Uncreate(fx_rect))
         self.play(ShowCreation(dx_rect))
         self.play(TransformFromCopy(show_area_sum[6], integral_sign[4]), Uncreate(dx_rect))
-        self.play(ApplyWave(rects_list[-1], rate_func=linear, amplitude=0.7, time_width=0.1, ripples=4), run_time=3)
+        self.play(ApplyWave(rects_list[-1], rate_func=linear, amplitude=0.4, time_width=0.1), run_time=3)
         int_rect = SurroundingRectangle(integral_sign)
         int_rect.set_stroke(GREEN, 2.5)
         summary = TexText(r'Area under the curve ', r'$f(x)$\\', r' from ', r'$x=$', r'$a$', ' to ', r'$x=$', r'$b$',
@@ -263,11 +285,11 @@ class Animate(Scene):
         summary.next_to(int_rect, DOWN)
         self.play(ShowCreation(int_rect), run_time=2)
         self.play(Write(summary[0:2]))
-        self.play(CircleIndicate(summary[1], color=YELLOW, run_time=1))
+        self.play(ApplyWave(summary[1], run_time=1, time_width=0.1, amplitude=0.1))
         self.play(Write(summary[2:5]))
-        self.play(CircleIndicate(summary[4], color=BLUE, run_time=1))
+        self.play(Flash(summary[4], color=BLUE, run_time=1, line_length=0.1))
         self.play(Write(summary[5:]))
-        self.play(CircleIndicate(summary[7], color=GREEN, run_time=1))
+        self.play(Flash(summary[7], color=GREEN, run_time=1, line_length=0.1))
         self.play(Uncreate(int_rect))
         self.wait()
         self.play(
