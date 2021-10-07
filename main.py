@@ -11,8 +11,8 @@ class Animate(Scene):
     def construct(self):
         axes = Axes((-3, 10), (-1, 8), axis_config={
             "include_tip": False,
-            "stroke_width":2,
-            "tick_size":0.04
+            "stroke_width": 2,
+            "tick_size": 0.04
         })
         axes.set_stroke(opacity=10)
         axes.save_state()
@@ -38,7 +38,11 @@ class Animate(Scene):
             lambda x: 3,
             color=ORANGE
         )
-        self.play(ShowCreation(poly_graph))
+        zero_graph = axes.get_graph(
+            lambda x: 0,
+            color=ORANGE
+        )
+        self.play(ShowCreation(poly_graph), run_time=2)
         left_dot = Dot(color=RED)
         right_dot = Dot(color=RED)
         left_dot.move_to(axes.i2gp(3, poly_graph))
@@ -88,7 +92,6 @@ class Animate(Scene):
         self.play(GrowFromCenter(right_brace), Write(right_brace_label))
         self.play(GrowFromCenter(top_brace), Write(top_brace_label))
         self.play(Write(const_rect), Write(in_label))
-
         self.wait()
         self.play(
             *[FadeOut(x) for x in [const_rect, right_brace, right_brace_label, top_brace_label, top_brace, in_label]])
@@ -96,7 +99,22 @@ class Animate(Scene):
             self.poly_func,
             color=GREEN,
         )
-        self.play(ReplacementTransform(const_graph, poly_graph),
+        self.play(ReplacementTransform(const_graph, zero_graph),
+                  left_dot.animate.move_to(axes.i2gp(left_end, zero_graph)),
+                  right_dot.animate.move_to(axes.i2gp(right_end, zero_graph)))
+        const_rect = axes.get_riemann_rectangles(zero_graph, [left_end, right_end], dx=3.75, stroke_color=WHITE,
+                                                 colors=(ORANGE, BLUE), fill_opacity=0.4)
+        rakib_request = TexText(r'Area = Height $\times$ 0 = 0', font_size=35)
+        top_brace = Brace(const_rect, UP)
+        top_brace_label = top_brace.get_text(
+            "Height", font_size=24, gradient=(BLUE, GREEN)
+        )
+        rakib_request.set_color(BLUE)
+        rakib_request.next_to(top_brace_label, UP)
+        self.play(GrowFromCenter(top_brace), Write(top_brace_label))
+        self.play(Write(rakib_request))
+        self.play(*list(map(FadeOut, [top_brace, top_brace_label, rakib_request])))
+        self.play(ReplacementTransform(zero_graph, poly_graph),
                   left_dot.animate.move_to(axes.i2gp(left_end, poly_graph)),
                   right_dot.animate.move_to(axes.i2gp(right_end, poly_graph)))
 
@@ -117,7 +135,6 @@ class Animate(Scene):
         pieces = self.create_const_lines(2, 6, 1, axes, poly_graph, color=YELLOW, opacity=0.7)
         self.play(ShowCreation(pieces), run_time=2)
         self.play(FadeIn(start_rect), run_time=1)
-
         f_brace = Brace(start_rect, LEFT, buff=0).set_color(YELLOW)
         dx_brace = Brace(start_rect, DOWN, buff=0).set_color(ORANGE)
         f_brace.label = f_brace.get_tex(r'f(x_1)', buff=0).scale(0.8).set_color(f_brace.get_color())
