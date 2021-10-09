@@ -94,26 +94,28 @@ class Animate(Scene):
         self.play(Write(const_rect), Write(in_label))
         self.wait()
         self.play(
-            *[FadeOut(x) for x in [const_rect, right_brace, right_brace_label, top_brace_label, top_brace, in_label]])
+            *[FadeOut(x) for x in [right_brace, right_brace_label, top_brace_label, top_brace, in_label]])
         poly_graph = axes.get_graph(
             self.poly_func,
             color=GREEN,
         )
+        zero_rect = axes.get_riemann_rectangles(zero_graph, [left_end, right_end], dx=3.75, stroke_color=WHITE,
+                                                colors=(ORANGE, BLUE), fill_opacity=0.4)
         self.play(ReplacementTransform(const_graph, zero_graph),
+                  ReplacementTransform(const_rect, zero_rect),
                   left_dot.animate.move_to(axes.i2gp(left_end, zero_graph)),
                   right_dot.animate.move_to(axes.i2gp(right_end, zero_graph)))
-        const_rect = axes.get_riemann_rectangles(zero_graph, [left_end, right_end], dx=3.75, stroke_color=WHITE,
-                                                 colors=(ORANGE, BLUE), fill_opacity=0.4)
-        rakib_request = TexText(r'Area = Height $\times$ 0 = 0', font_size=35)
-        top_brace = Brace(const_rect, UP)
+
+        rakib_request = TexText(r'Area = Width $\times$ 0 = 0', font_size=35)
+        top_brace = Brace(zero_rect, UP)
         top_brace_label = top_brace.get_text(
-            "Height", font_size=24, gradient=(BLUE, GREEN)
+            "Wdith", font_size=24, gradient=(BLUE, GREEN)
         )
-        rakib_request.set_color(BLUE)
+        rakib_request.set_color(GREEN_E)
         rakib_request.next_to(top_brace_label, UP)
         self.play(GrowFromCenter(top_brace), Write(top_brace_label))
         self.play(Write(rakib_request))
-        self.play(*list(map(FadeOut, [top_brace, top_brace_label, rakib_request])))
+        self.play(*list(map(FadeOut, [top_brace, top_brace_label, rakib_request, zero_rect])))
         self.play(ReplacementTransform(zero_graph, poly_graph),
                   left_dot.animate.move_to(axes.i2gp(left_end, poly_graph)),
                   right_dot.animate.move_to(axes.i2gp(right_end, poly_graph)))
@@ -198,38 +200,38 @@ class Animate(Scene):
         to_remove += [last_area_in_text, last_brace, last_brace.label, dx_brace_group]
         self.play(*(list(map(FadeOut, to_remove))))
 
+        self.play(ShowCreation(tex_rect))
+        self.play(ReplacementTransform(tex_rect, show_area_sum), *list(map(FadeOut, area_tex_list)))
+
         # Add error expl
         first_approx.save_state()
         self.play(*[i.animate.set_opacity(0.1) for i in first_approx[1:]], lag_ratio=1, run_time=2)
         self.play(
-            ShowCreationThenFadeOut(Line(axes.c2p(2, -0.1), axes.c2p(3, -0.1)).set_stroke(color=PURPLE, opacity=1)))
+            ShowCreationThenFadeOut(Line(axes.c2p(2, -0.1), axes.c2p(3, -0.1)).set_stroke(color=PURPLE, opacity=10)))
         _ = poly_graph.underlying_function(2)
         self.play(ShowCreationThenFadeOut(
-            Line(axes.c2p(2, _ + 0.1), axes.c2p(3, _ + 0.1)).set_stroke(color=PURPLE, opacity=1)))
+            Line(axes.c2p(2, _ + 0.1), axes.c2p(3, _ + 0.1)).set_stroke(color=PURPLE, opacity=10)))
         _tracker = ValueTracker(2)
-        _dot = Dot(color=ORANGE)
+        _dot = Dot(color=PURPLE)
         _dot.move_to(axes.i2gp(2, poly_graph))
         f_always(
             _dot.move_to,
             lambda: axes.i2gp(_tracker.get_value(), poly_graph)
         )
-        self.play(FadeIn(_dot, scale=0.5))
+        self.play(FadeIn(_dot, scale=0.5), FadeOut(left_dot))
         self.play(_tracker.animate.set_value(3), run_time=2)
-        self.play(FadeOut(_dot), first_approx.animate.restore(), run_time=2)
+        self.play(FadeOut(_dot), FadeIn(left_dot), first_approx.animate.restore(), run_time=2)
         # End Err expl
 
-        self.play(ShowCreation(tex_rect))
-        self.play(ReplacementTransform(tex_rect, show_area_sum), *list(map(FadeOut, area_tex_list)))
-        # self.play(Transform(show_area_sum[0], TexText(r'$\int_a^b$')))
         n_tex, n_value = n_label = VGroup(
-            Tex(r'n='),
+            Tex(r'n', r'='),
             DecimalNumber(
                 4,
                 num_decimal_places=0
             )
         ).scale(0.7)
         dx_tex, dx_value = dx_label = VGroup(
-            Tex(r'\Delta x='),
+            Tex(r'\Delta x', r'='),
             DecimalNumber(
                 1,
                 num_decimal_places=2
@@ -240,13 +242,12 @@ class Animate(Scene):
         n_dx_grp = VGroup(n_label, dx_label).arrange(DOWN)
         n_dx_grp.to_edge(RIGHT_SIDE).shift(RIGHT / 1.8)
         self.play(Write(n_dx_grp))
-
-
         int_start = TexText(r'$a$').set_color(BLUE)
         int_end = TexText(r'$b$').set_color(GREEN)
         int_start.move_to(axes.c2p(2, -.5))
         int_end.move_to(axes.c2p(6, -.5))
         self.play(axes.animate.restore(), Write(int_start), Write(int_end))
+
         for k in range(1, len(dx_list)):
             new_approx = rects_list[k]
             self.play(Transform(first_approx, new_approx), FadeOut(pieces),
@@ -257,6 +258,10 @@ class Animate(Scene):
             self.play(FadeIn(pieces), lag_ratio=0.5, time=1)
             self.wait(0.5)
         self.play(show_area_sum.animate.shift(UP))
+        to_inf = Tex(r'\to \infty', font_size=35).move_to(n_tex[1]).shift(RIGHT / 3)
+        to_zero = Tex(r'\to 0', font_size=35).move_to(dx_tex[1]).shift(RIGHT / 5)
+        self.play(FadeOut(n_value), Transform(n_tex[1], to_inf))
+        self.play(FadeOut(dx_value), Transform(dx_tex[1], to_zero))
         sum_rect = SurroundingRectangle(show_area_sum[2:5])
         sum_rect.set_stroke(BLUE, 2.5)
         integral_sign = Tex(r'\int', r'_a', r'^b', r'f(x)', r'\,dx', font_size=35)
@@ -275,7 +280,7 @@ class Animate(Scene):
         self.play(TransformFromCopy(show_area_sum[5], integral_sign[3]), Uncreate(fx_rect))
         self.play(ShowCreation(dx_rect))
         self.play(TransformFromCopy(show_area_sum[6], integral_sign[4]), Uncreate(dx_rect))
-        self.play(ApplyWave(rects_list[-1], rate_func=linear, amplitude=0.4, time_width=0.1), run_time=3)
+        self.play(ApplyWave(rects_list[-1], rate_func=linear, amplitude=0.25, time_width=0.1), run_time=3)
         int_rect = SurroundingRectangle(integral_sign)
         int_rect.set_stroke(GREEN, 2.5)
         summary = TexText(r'Area under the curve ', r'$f(x)$\\', r' from ', r'$x=$', r'$a$', ' to ', r'$x=$', r'$b$',
