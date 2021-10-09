@@ -42,7 +42,7 @@ class Animate(Scene):
             lambda x: 0,
             color=ORANGE
         )
-        self.play(ShowCreation(poly_graph), run_time=2)
+        self.play(ShowCreation(poly_graph), run_time=3)
         left_dot = Dot(color=RED)
         right_dot = Dot(color=RED)
         left_dot.move_to(axes.i2gp(3, poly_graph))
@@ -67,6 +67,12 @@ class Animate(Scene):
         left_end = 2
         right_end = 6
         self.play(left_tracker.animate.set_value(left_end), right_tracker.animate.set_value(right_end), run_time=2)
+        init_area = axes.get_riemann_rectangles(poly_graph, [left_end, right_end], dx=0.01, stroke_width=0.0,
+                                                colors=(ORANGE, PURPLE), fill_opacity=0.4)
+        self.play(ShowCreationThenFadeOut(init_area), run_time=2)
+        self.wait()
+        self.remove(init_area)
+        self.wait()
         # self.embed()
         left_dot.clear_updaters()
         right_dot.clear_updaters()
@@ -76,7 +82,7 @@ class Animate(Scene):
                       left_dot.animate.move_to(axes.i2gp(left_end, graph_list[i + 1])),
                       right_dot.animate.move_to(axes.i2gp(right_end, graph_list[i + 1])))
             self.wait()
-
+        self.wait(1)
         const_rect = axes.get_riemann_rectangles(const_graph, [left_end, right_end], dx=3.75, stroke_color=WHITE,
                                                  colors=(ORANGE, BLUE), fill_opacity=0.4)
         right_brace = Brace(const_rect, RIGHT)
@@ -115,11 +121,29 @@ class Animate(Scene):
         rakib_request.next_to(top_brace_label, UP)
         self.play(GrowFromCenter(top_brace), Write(top_brace_label))
         self.play(Write(rakib_request))
+        self.wait(2)
         self.play(*list(map(FadeOut, [top_brace, top_brace_label, rakib_request, zero_rect])))
         self.play(ReplacementTransform(zero_graph, poly_graph),
                   left_dot.animate.move_to(axes.i2gp(left_end, poly_graph)),
                   right_dot.animate.move_to(axes.i2gp(right_end, poly_graph)))
         self.wait()
+
+        # add function non_linearity
+        f_always(
+            left_dot.move_to,
+            lambda: axes.i2gp(left_tracker.get_value(), poly_graph)
+        )
+        f_always(
+            right_dot.move_to,
+            lambda: axes.i2gp(right_tracker.get_value(), poly_graph)
+        )
+        self.play(left_tracker.animate.set_value(1.5), right_tracker.animate.set_value(6.5), run_time=2)
+        self.play(left_tracker.animate.set_value(3.5), right_tracker.animate.set_value(4.5), run_time=2)
+        self.play(left_tracker.animate.set_value(2), right_tracker.animate.set_value(6), run_time=2)
+        left_dot.clear_updaters()
+        right_dot.clear_updaters()
+        # end
+
         dx_list = [1, 0.5, 0.25, 0.1, 0.05, 0.025, 0.01]
         rects_list = VGroup(
             *[
@@ -132,11 +156,14 @@ class Animate(Scene):
         first_approx = rects_list[0]
         start_rect = first_approx[0]
         start_rect.get_num_points()
+        x_pieces = self.create_const_lines(2, 6, 1, axes, axes.get_graph(lambda x: 0), color=RED, opacity=1, width=6)
+        self.play(ShowCreation(x_pieces), run_time=2)
         pieces = self.create_const_lines(2, 6, 1, axes, poly_graph, color=YELLOW, opacity=0.7)
-        self.play(ShowCreation(pieces), run_time=2)
+        self.play(ReplacementTransform(x_pieces, pieces), run_time=3)
         self.play(FadeIn(start_rect), run_time=1)
         f_brace = Brace(start_rect, LEFT, buff=0).set_color(YELLOW)
         dx_brace = Brace(start_rect, DOWN, buff=0).set_color(ORANGE)
+
         f_brace.label = f_brace.get_tex(r'f(x_1)', buff=0).scale(0.8).set_color(f_brace.get_color())
         dx_brace.label = dx_brace.get_tex(r'\Delta x').scale(0.8).set_color(dx_brace.get_color())
 
@@ -227,6 +254,9 @@ class Animate(Scene):
         self.play(_tracker.animate.set_value(2), run_time=2)
 
         self.play(FadeOut(_dot), FadeIn(left_dot), first_approx.animate.restore(), FadeOut(_line), run_time=2)
+        self.remove(_line)
+        self.remove(_dot)
+        self.remove(_tracker)
         # End Err expl
 
         n_tex, n_value = n_label = VGroup(
@@ -282,7 +312,7 @@ class Animate(Scene):
         dx_rect = SurroundingRectangle(show_area_sum[6])
         fx_rect.set_stroke(BLUE, 2.5)
         dx_rect.set_stroke(BLUE, 2.5)
-        self.play(ShowCreation(fx_rect))
+        self.play(FadeIn(fx_rect))
         self.play(TransformFromCopy(show_area_sum[5], integral_sign[3]), Uncreate(fx_rect))
         self.play(ShowCreation(dx_rect))
         self.play(TransformFromCopy(show_area_sum[6], integral_sign[4]), Uncreate(dx_rect))
