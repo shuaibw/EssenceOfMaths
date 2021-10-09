@@ -119,7 +119,6 @@ class Animate(Scene):
         self.play(ReplacementTransform(zero_graph, poly_graph),
                   left_dot.animate.move_to(axes.i2gp(left_end, poly_graph)),
                   right_dot.animate.move_to(axes.i2gp(right_end, poly_graph)))
-
         self.wait()
         dx_list = [1, 0.5, 0.25, 0.1, 0.05, 0.025, 0.01]
         rects_list = VGroup(
@@ -218,9 +217,16 @@ class Animate(Scene):
             _dot.move_to,
             lambda: axes.i2gp(_tracker.get_value(), poly_graph)
         )
-        self.play(FadeIn(_dot, scale=0.5), FadeOut(left_dot))
-        self.play(_tracker.animate.set_value(3), run_time=2)
-        self.play(FadeOut(_dot), FadeIn(left_dot), first_approx.animate.restore(), run_time=2)
+        _line = always_redraw(lambda: Line(_dot.get_center(), axes.i2gp(_tracker.get_value(), axes.get_graph(
+            lambda x: self.err_line_step(x, poly_graph))), color=RED))
+        self.play(FadeIn(_dot, scale=0.5), FadeOut(left_dot), ShowCreation(_line))
+        self.play(_tracker.animate.set_value(3), run_time=1)
+        self.wait()
+        self.play(_tracker.animate.set_value(6), run_time=1.5)
+        self.wait()
+        self.play(_tracker.animate.set_value(2), run_time=2)
+
+        self.play(FadeOut(_dot), FadeIn(left_dot), first_approx.animate.restore(), FadeOut(_line), run_time=2)
         # End Err expl
 
         n_tex, n_value = n_label = VGroup(
@@ -312,6 +318,15 @@ class Animate(Scene):
             line.set_stroke(**kwargs)
             pieces.add(line)
         return pieces
+
+    def err_line_step(self, x, graph):
+        if 2 <= x <= 3:
+            return graph.underlying_function(2)
+        elif 3 <= x <= 4:
+            return graph.underlying_function(3)
+        elif 4 <= x <= 5:
+            return graph.underlying_function(4)
+        return graph.underlying_function(5)
 
     def poly_func(self, x):
         return ((x - 1) ** 3 - 5 * (x - 1) ** 2 + 2 * (x - 1) + 30) / 8
